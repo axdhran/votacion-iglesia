@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Resultados · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Actas certificadas</p>
+  <h1>Resultados por departamento</h1>
+  <p class="lead">Solo aparecen los departamentos cuya votación ya fue cerrada. Cada acta puede recalcularse desde las papeletas almacenadas.</p>
+</section>
+
+{% if departments %}
+  <div class="card-grid results-grid">
+    {% for department in departments %}
+      <a class="card dept-result-card" href="{{ url_for('public.result_detail', department_id=department.id) }}">
+        <span class="badge badge-closed">Cerrada</span>
+        <h2>{{ department.name }}</h2>
+        <p class="muted">Acta generada el {{ department.result_created_at|friendly_datetime }}</p>
+        <span class="text-link">Abrir acta →</span>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state card">
+    <h2>Aún no hay resultados publicados</h2>
+    <p>Los conteos se muestran únicamente cuando la administración cierra la votación de un departamento.</p>
+    <a class="button button-primary" href="{{ url_for('public.index') }}">Volver al inicio</a>
+  </div>
+{% endif %}
+{% endblock %}

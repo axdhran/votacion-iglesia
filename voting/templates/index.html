@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Voto Iglesia · Inicio{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Elecciones internas</p>
+    <h1>Su voto cuenta. Su identidad queda fuera de la papeleta.</h1>
+    <p class="lead">
+      Plataforma de votación para los departamentos de la iglesia. Puede votar desde el
+      local o en línea con un código de un solo uso, y verificar después que su papeleta
+      fue registrada sin revelar por quién votó.
+    </p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="{{ url_for('vote.enter') }}">Ingresar a votar</a>
+      <a class="button button-secondary" href="{{ url_for('public.results') }}">Ver resultados</a>
+    </div>
+    <p class="muted small">Los resultados de un departamento solo se publican cuando su votación cierra.</p>
+  </div>
+  <div class="hero-card" aria-label="Resumen del proceso">
+    <div class="seal" aria-hidden="true">✓</div>
+    <h2>Proceso verificable</h2>
+    <ul class="check-list">
+      <li>Un código de acceso por persona y departamento.</li>
+      <li>La identidad nunca se guarda junto al voto.</li>
+      <li>Cada papeleta queda encadenada con HMAC.</li>
+      <li>El acta se firma al cerrar la votación.</li>
+    </ul>
+  </div>
+</section>
+
+{% if kiosk_departments %}
+  <div class="notice notice-info">
+    <strong>Votación en el local, sin código</strong>
+    <p>Si está en la iglesia, use las computadoras de la mesa. El voluntario le entregará la pantalla lista para votar y, al terminar, se reiniciará para la siguiente persona.</p>
+    <a class="button button-secondary" href="{{ url_for('vote.kiosk_home') }}">Abrir mesa de votación</a>
+  </div>
+{% endif %}
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Cómo funciona</p>
+    <h2>Tres pasos, sin datos personales en la papeleta</h2>
+  </div>
+  <div class="steps">
+    <article class="card step">
+      <span class="step-number">1</span>
+      <h3>Reciba su código</h3>
+      <p>La iglesia le entrega un código de un solo uso, en el local o por el canal que haya definido. El sistema no guarda a quién se le entregó.</p>
+    </article>
+    <article class="card step">
+      <span class="step-number">2</span>
+      <h3>Vote en su departamento</h3>
+      <p>Elija 3 candidatos para Presidente, Vicepresidente y Secretario, y 1 candidato para Tesorero. Ambas rondas se completan en una sola sesión.</p>
+    </article>
+    <article class="card step">
+      <span class="step-number">3</span>
+      <h3>Guarde su comprobante</h3>
+      <p>Recibirá un código por cada papeleta. Con él puede comprobar que fue registrada, sin que el sistema muestre sus selecciones.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section split">
+  <div class="card privacy-card">
+    <p class="eyebrow">Anonimato</p>
+    <h2>Dos registros que nunca se tocan</h2>
+    <p>
+      El control de participación y el contenido de la papeleta viven en tablas
+      separadas. Al canjear el código se crea una sesión anónima con un identificador
+      aleatorio; la sesión no guarda el código ni ningún dato del votante. El voto se
+      guarda después, en otra transacción, sin referencia a la persona.
+    </p>
+  </div>
+  <div class="card privacy-card">
+    <p class="eyebrow">Integridad</p>
+    <h2>Resultados que se pueden recalcular</h2>
+    <p>
+      Los conteos se obtienen siempre de las papeletas almacenadas. Cada papeleta
+      incluye un hash encadenado y el acta de cierre se firma con una clave que no
+      está en SQLite. El panel administrativo permite repetir la verificación.
+    </p>
+  </div>
+</section>
+
+{% if closed_departments %}
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Actas publicadas</p>
+    <h2>Departamentos con votación cerrada</h2>
+  </div>
+  <div class="card-grid">
+    {% for department in closed_departments %}
+      <a class="card dept-link" href="{{ url_for('public.result_detail', department_id=department.id) }}">
+        <h3>{{ department.name }}</h3>
+        <p class="muted">Cerrada el {{ department.result_created_at|friendly_datetime }}</p>
+        <span class="text-link">Ver acta certificada →</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

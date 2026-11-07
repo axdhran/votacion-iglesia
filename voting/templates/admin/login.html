@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Administración · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow">
+  <div class="page-heading">
+    <p class="eyebrow">Acceso restringido</p>
+    <h1>Panel de administración</h1>
+    <p class="lead">Registre candidatos, inscriba candidatos por departamento y controle la apertura y el cierre de cada votación.</p>
+  </div>
+
+  <div class="card form-card">
+    <form method="post" action="{{ url_for('admin.login') }}" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="username">Usuario</label>
+        <input id="username" name="username" type="text" required maxlength="50" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="button button-primary button-full" type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <div class="notice notice-info">
+    <strong>La cuenta se crea desde la terminal.</strong>
+    <p>Use <code>flask --app app create-admin</code>. No hay registro público de administradores.</p>
+  </div>
+</section>
+{% endblock %}

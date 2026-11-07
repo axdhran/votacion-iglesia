@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Auditoría · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Trazabilidad</p>
+    <h1>Auditoría administrativa</h1>
+    <p class="lead">Acciones de creación, inscripción, generación de tokens, apertura y cierre. El registro no contiene el contenido de los votos ni identidad de votantes.</p>
+  </div>
+  {% if chain.ok %}
+    <span class="badge badge-verified">✓ Cadena válida</span>
+  {% else %}
+    <span class="badge badge-error">✕ Cadena alterada</span>
+  {% endif %}
+</section>
+
+{% if not chain.ok %}
+  <div class="notice notice-error">
+    <strong>La cadena de auditoría no es válida.</strong>
+    <p>{{ chain.errors|join('; ') }}</p>
+  </div>
+{% endif %}
+
+<div class="stat-strip">
+  <div class="stat"><strong>{{ chain.entries }}</strong><span>acciones registradas</span></div>
+  <div class="stat"><strong>{{ chain.head|short_hash }}</strong><span>cabeza de cadena</span></div>
+</div>
+
+<div class="table-wrap card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Fecha</th>
+        <th>Actor</th>
+        <th>Acción</th>
+        <th>Entidad</th>
+        <th>Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+        <tr>
+          <td>{{ entry.id }}</td>
+          <td class="nowrap">{{ entry.created_at|friendly_datetime }}</td>
+          <td>{{ entry.actor }}</td>
+          <td><code>{{ entry.action }}</code></td>
+          <td>{{ entry.entity_type }}{% if entry.entity_id %} · {{ entry.entity_id }}{% endif %}</td>
+          <td><code class="wrap-anywhere">{{ entry.details }}</code></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="muted">Todavía no hay acciones registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="form-actions">
+  <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">Volver al panel</a>
+</div>
+{% endblock %}

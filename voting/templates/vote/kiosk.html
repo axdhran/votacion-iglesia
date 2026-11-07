@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Mesa de votación · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow vote-flow kiosk-home">
+  <div class="page-heading vote-heading">
+    <p class="eyebrow">Modo mesa · sin código</p>
+    <h1>Mesa de votación</h1>
+    <p class="lead">Esta pantalla se comparte entre los votantes. Entregue el dispositivo a una persona, espere a que termine y la pantalla volverá aquí sola para la siguiente.</p>
+  </div>
+
+  <div class="notice notice-info">
+    <strong>Para el voluntario de la mesa</strong>
+    <ul class="check-list">
+      <li>Verifique la identidad de la persona fuera del sistema.</li>
+      <li>Toque el botón del departamento y entregue el dispositivo.</li>
+      <li>Al terminar, la pantalla se reinicia automáticamente.</li>
+      <li>Si la persona se arrepiente antes de enviar, use <strong>Reiniciar pantalla</strong>.</li>
+    </ul>
+  </div>
+
+  {% if has_session %}
+    <div class="notice notice-warning">
+      <strong>Hay una votación sin terminar en esta pantalla.</strong>
+      <p>Puede continuar con esa persona o reiniciar para la siguiente. Si reinicia, no se guarda ningún voto.</p>
+      <div class="form-actions">
+        <a class="button button-secondary button-large" href="{{ url_for('vote.ballot') }}">Continuar la votación pendiente</a>
+        <form method="post" action="{{ url_for('vote.kiosk_reset') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="button button-ghost button-large" type="submit">Reiniciar pantalla</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if departments %}
+    <div class="kiosk-department-list">
+      {% for department in departments %}
+        <form method="post" action="{{ url_for('vote.kiosk_start') }}" class="kiosk-start-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="department_id" value="{{ department.id }}">
+          <button class="button button-primary button-large button-full" type="submit">
+            Empezar a votar · {{ department.name }}
+          </button>
+          <p class="help">El votante elegirá 3 nombres para los cargos principales y 1 para Tesorero.</p>
+        </form>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state">
+      <h2>No hay votaciones abiertas en modo mesa</h2>
+      <p class="muted">El administrador debe abrir un departamento configurado como <strong>Mesa sin código</strong>.</p>
+      <a class="button button-secondary" href="{{ url_for('public.index') }}">Volver al inicio</a>
+    </div>
+  {% endif %}
+
+  <div class="notice">
+    <strong>¿La votación usa código personal?</strong>
+    <p>Si a usted le entregaron una tarjeta con un código, use la <a href="{{ url_for('vote.enter') }}">página de acceso con código</a>.</p>
+  </div>
+</section>
+{% endblock %}

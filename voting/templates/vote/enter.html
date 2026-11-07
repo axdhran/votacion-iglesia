@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Entrar a votar · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow vote-flow">
+  <ol class="steps-indicator" aria-label="Pasos para votar">
+    <li class="active" aria-current="step"><span>1</span> Entrar</li>
+    <li><span>2</span> Elegir</li>
+    <li><span>3</span> Confirmar</li>
+  </ol>
+
+  <div class="page-heading vote-heading">
+    <p class="eyebrow">Acceso del votante</p>
+    <h1>Entre a votar</h1>
+    <p class="lead">Solo necesita el código que le entregó la iglesia. No escriba su nombre ni datos personales.</p>
+  </div>
+
+  {% if kiosk_departments %}
+    <div class="notice notice-info">
+      <strong>¿Está votando en una computadora de la mesa?</strong>
+      <p>En el modo mesa no necesita código: el voluntario le entregará la pantalla lista para votar.</p>
+      <a class="button button-secondary button-large" href="{{ url_for('vote.kiosk_home') }}">Ir a la mesa de votación</a>
+    </div>
+  {% endif %}
+
+  <div class="card form-card friendly-card">
+    <form method="post" action="{{ url_for('vote.enter') }}" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="token">Escriba su código</label>
+        <input
+          id="token"
+          name="token"
+          class="code-input"
+          type="text"
+          required
+          minlength="8"
+          maxlength="200"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="ABCD-EFGH-IJKL"
+          aria-describedby="token-help"
+        >
+        <p id="token-help" class="help">Puede escribirlo con guiones, con espacios o todo junto. También puede pegarlo con Ctrl+V.</p>
+      </div>
+      <button class="button button-primary button-full button-large" type="submit">
+        Entrar y ver mi papeleta
+      </button>
+    </form>
+  </div>
+
+  <details class="help-panel">
+    <summary>¿Dónde está mi código?</summary>
+    <div>
+      <p>La iglesia le entregó una tarjeta o un mensaje con un código parecido a <strong>ABCD-EFGH-IJKL</strong>.</p>
+      <ul class="check-list">
+        <li>Si la tarjeta tiene un cuadrito (código QR), apunte la cámara de su teléfono al cuadrito. Se abrirá esta página automáticamente.</li>
+        <li>Si no puede usar el cuadrito, escriba el código en el recuadro de arriba.</li>
+        <li>El código sirve una sola vez. Si ya votó, no podrá usarlo de nuevo.</li>
+      </ul>
+    </div>
+  </details>
+
+  {% if has_session %}
+    <div class="notice notice-info">
+      <strong>Ya empezó a votar en este dispositivo.</strong>
+      <p>Si no terminó de votar, puede continuar donde quedó. Si ya envió su voto, esta sesión ya no sirve.</p>
+      <a class="button button-secondary button-large" href="{{ url_for('vote.ballot') }}">Continuar mi votación</a>
+    </div>
+  {% endif %}
+
+  <div class="notice notice-privacy">
+    <strong>Su voto es secreto.</strong>
+    <p>El sistema no guarda su nombre junto a la papeleta. Nadie podrá saber por quién votó.</p>
+  </div>
+</section>
+{% endblock %}

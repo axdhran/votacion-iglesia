@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Revisar mi voto · {{ department.name }}{% endblock %}
+{% block content %}
+<section class="narrow vote-flow">
+  <ol class="steps-indicator" aria-label="Pasos para votar">
+    <li><span>1</span> Entrar</li>
+    <li><span>2</span> Elegir</li>
+    <li class="active" aria-current="step"><span>3</span> Confirmar</li>
+  </ol>
+
+  <div class="page-heading vote-heading">
+    <p class="eyebrow">Último paso</p>
+    <h1>Revise su voto</h1>
+    <p class="lead">Así quedarán sus dos papeletas. Si algo está mal, puede corregirlo. Si todo está bien, confirme para enviar.</p>
+  </div>
+
+  <div class="card review-card">
+    <p class="eyebrow">Primera ronda</p>
+    <h2>Cargos principales</h2>
+    <ol class="review-list">
+      {% for candidate in principal %}
+        <li>
+          <span class="review-number">{{ loop.index }}</span>
+          <span>{{ candidate.full_name }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+    <p class="help">Estos nombres se usarán para Presidente, Vicepresidente y Secretario según el orden de votos.</p>
+  </div>
+
+  <div class="card review-card">
+    <p class="eyebrow">Segunda ronda</p>
+    <h2>Tesorero</h2>
+    <ol class="review-list">
+      {% for candidate in treasurer %}
+        <li>
+          <span class="review-number">{{ loop.index }}</span>
+          <span>{{ candidate.full_name }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  <div class="notice notice-warning">
+    <strong>Después de confirmar no se puede cambiar.</strong>
+    <p>Si todavía no está seguro, toque <strong>Corregir mi selección</strong> y vuelva a elegir.</p>
+  </div>
+
+  <div class="review-actions">
+    <form method="post" action="{{ url_for('vote.edit') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% for candidate in principal %}
+        <input type="hidden" name="principal" value="{{ candidate.id }}">
+      {% endfor %}
+      {% for candidate in treasurer %}
+        <input type="hidden" name="treasurer" value="{{ candidate.id }}">
+      {% endfor %}
+      <button class="button button-secondary button-large" type="submit">Corregir mi selección</button>
+    </form>
+
+    <form method="post" action="{{ url_for('vote.cast_ballot') }}" data-confirm="¿Confirma que su voto está correcto? Después de enviarlo no se puede cambiar.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% for candidate in principal %}
+        <input type="hidden" name="principal" value="{{ candidate.id }}">
+      {% endfor %}
+      {% for candidate in treasurer %}
+        <input type="hidden" name="treasurer" value="{{ candidate.id }}">
+      {% endfor %}
+      <button class="button button-primary button-large" type="submit">Confirmar y enviar mi voto</button>
+    </form>
+  </div>
+
+  {% if kiosk %}
+    <p class="help center">Modo mesa: al confirmar, la pantalla mostrará el resultado y volverá sola al inicio para la siguiente persona.</p>
+  {% endif %}
+</section>
+{% endblock %}

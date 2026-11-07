@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Mantenimiento · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Configuración</p>
+    <h1>Mantenimiento de la base</h1>
+    <p class="lead">Herramientas para respaldar y limpiar los datos de prueba antes de una votación real.</p>
+  </div>
+  <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">Volver al panel</a>
+</section>
+
+<div class="notice notice-warning">
+  <strong>El reinicio borra todos los datos electorales.</strong>
+  <p>Se eliminan departamentos, candidatos, inscripciones, tokens, sesiones, papeletas, actas y la auditoría. <strong>No se puede deshacer desde la aplicación.</strong> Antes de borrar se crea un respaldo automático.</p>
+  <p>Las cuentas de administrador se conservan para que pueda seguir entrando al panel.</p>
+</div>
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Datos actuales</p>
+    <h2>Lo que se borraría</h2>
+  </div>
+  <div class="table-wrap card">
+    <table>
+      <thead><tr><th>Información</th><th class="num">Cantidad</th></tr></thead>
+      <tbody>
+        {% for table, count in counts.items() %}
+          <tr>
+            <td>{{ table_labels[table] }}</td>
+            <td class="num">{{ count }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card danger-zone">
+    <h2>Reiniciar la base de datos</h2>
+    <p>Use esta opción solo si está seguro de que los datos actuales son de prueba. Si hay una votación abierta, ciérrela o detenga el servidor antes de continuar.</p>
+    <form method="post" action="{{ url_for('admin.maintenance_reset') }}" autocomplete="off" data-confirm="¿Reiniciar la base de datos? Se borrarán todos los datos electorales y se creará un respaldo.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="confirm">Escriba <strong>REINICIAR</strong> para confirmar</label>
+        <input id="confirm" name="confirm" type="text" required pattern="[Rr][Ee][Ii][Nn][Ii][Cc][Ii][Aa][Rr]" placeholder="REINICIAR" autocomplete="off">
+      </div>
+      <label class="check-field">
+        <input type="checkbox" name="understand" value="1" required>
+        <span>Entiendo que se borrarán todos los datos electorales y que solo queda el respaldo automático.</span>
+      </label>
+      <button class="button button-danger button-large" type="submit">Reiniciar base de datos</button>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Respaldos</p>
+    <h2>Últimas copias automáticas</h2>
+  </div>
+  {% if backups %}
+    <div class="table-wrap card">
+      <table>
+        <thead><tr><th>Archivo</th><th class="num">Tamaño</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for backup in backups %}
+            <tr>
+              <td><code class="small">{{ backup.name }}</code></td>
+              <td class="num">{{ backup.size_kb }} KB</td>
+              <td>{{ backup.modified }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="help">Los respaldos se guardan en la carpeta <code>instance/backups</code> (o en la ruta configurada en <code>BACKUP_DIR</code>).</p>
+  {% else %}
+    <div class="card empty-state">
+      <p class="muted">Todavía no hay respaldos. Se creará uno automáticamente al reiniciar.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

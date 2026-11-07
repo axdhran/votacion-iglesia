@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Resultados · {{ result.department_name }}{% endblock %}
+{% block content %}
+{% include "results/_result_content.html" %}
+
+<div class="form-actions">
+  <a class="button button-secondary" href="{{ url_for('public.results') }}">Volver a resultados</a>
+  <a class="button button-ghost" href="{{ url_for('public.verify') }}">Verificar un comprobante</a>
+</div>
+{% endblock %}

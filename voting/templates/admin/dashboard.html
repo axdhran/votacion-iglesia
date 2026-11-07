@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Panel · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Administración</p>
+    <h1>Panel de control</h1>
+    <p class="lead">Apertura, cierre, candidatos y verificación de integridad.</p>
+  </div>
+  <div class="heading-actions">
+    <a class="button button-secondary" href="{{ url_for('admin.candidates') }}">Candidatos</a>
+    <a class="button button-secondary" href="{{ url_for('admin.departments') }}">Departamentos</a>
+    <a class="button button-secondary" href="{{ url_for('admin.audit') }}">Auditoría</a>
+    <a class="button button-secondary" href="{{ url_for('admin.maintenance') }}">Mantenimiento</a>
+  </div>
+</section>
+
+{% if not audit_chain.ok %}
+  <div class="notice notice-error">
+    <strong>La cadena de auditoría no es válida.</strong>
+    <p>No continúe con el proceso hasta revisar la base de datos y la clave de integridad. Detalle: {{ audit_chain.errors|join('; ') }}</p>
+  </div>
+{% else %}
+  <div class="notice notice-success">
+    <strong>Cadena de auditoría válida.</strong>
+    <p>{{ audit_chain.entries }} acciones administrativas registradas y verificadas.</p>
+  </div>
+{% endif %}
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Departamentos</p>
+    <h2>Estado de las votaciones</h2>
+  </div>
+
+  {% if departments %}
+    <div class="admin-dept-list">
+      {% for department in departments %}
+        <article class="card admin-dept-card">
+          <div class="admin-dept-top">
+            <div>
+              <span class="badge badge-{{ department.status }}">{{ department_status_labels[department.status] }}</span>
+              <h3>{{ department.name }}</h3>
+            </div>
+            <div class="admin-actions">
+              {% if department.status == "draft" %}
+                <form method="post" action="{{ url_for('admin.department_open', department_id=department.id) }}" data-confirm="¿Abrir la votación de {{ department.name }}? Después no se podrán inscribir más candidatos.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="button button-primary button-small" type="submit">Abrir votación</button>
+                </form>
+              {% elif department.status == "open" %}
+                <form method="post" action="{{ url_for('admin.department_close', department_id=department.id) }}" data-confirm="¿Cerrar y certificar la votación de {{ department.name }}? El cierre es definitivo.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="button button-danger button-small" type="submit">Cerrar y certificar</button>
+                </form>
+              {% endif %}
+              <a class="button button-secondary button-small" href="{{ url_for('admin.tokens', department_id=department.id) }}">Tokens</a>
+              {% if department.status == "closed" %}
+                <a class="button button-secondary button-small" href="{{ url_for('admin.results', department_id=department.id) }}">Acta</a>
+              {% endif %}
+              <a class="button button-ghost button-small" href="{{ url_for('admin.integrity', department_id=department.id) }}">Integridad</a>
+            </div>
+          </div>
+
+          <div class="mini-stats">
+            <span><strong>{{ department.principal_candidates }}</strong> principales</span>
+            <span><strong>{{ department.treasurer_candidates }}</strong> tesorero</span>
+            <span><strong>{{ department.tokens_used }}/{{ department.tokens_total }}</strong> tokens usados</span>
+            <span><strong>{{ department.participations }}</strong> participaciones</span>
+            <span><strong>{{ department.ballots }}</strong> papeletas</span>
+          </div>
+
+          <p class="muted small">
+            {% if department.status == "draft" %}
+              Inscriba al menos 3 candidatos principales y 1 de tesorero antes de abrir.
+            {% elif department.status == "open" %}
+              La votación está abierta. Los resultados permanecen ocultos hasta el cierre.
+            {% else %}
+              Cerrada el {{ department.closed_at|friendly_datetime }}. Acta disponible.
+            {% endif %}
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state card">
+      <h2>Aún no hay departamentos</h2>
+      <p>Cree el primer departamento para comenzar.</p>
+      <a class="button button-primary" href="{{ url_for('admin.departments') }}">Crear departamento</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

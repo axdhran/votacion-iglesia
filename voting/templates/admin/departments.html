@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Departamentos · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Configuración</p>
+    <h1>Departamentos</h1>
+    <p class="lead">Cada departamento tiene su propio conjunto de candidatos, dos rondas y resultados independientes.</p>
+  </div>
+  <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">Volver al panel</a>
+</section>
+
+<div class="two-column align-start">
+  <div class="card form-card">
+    <h2>Crear departamento</h2>
+    <form method="post" action="{{ url_for('admin.departments') }}" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="name">Nombre del departamento</label>
+        <input id="name" name="name" type="text" required minlength="2" maxlength="80" placeholder="Ej. Jóvenes">
+      </div>
+      <div class="field">
+        <label for="voting_mode">Forma de acceso</label>
+        <select id="voting_mode" name="voting_mode">
+          <option value="token">Código personal (un token por votante)</option>
+          <option value="kiosk">Mesa sin código (computadoras compartidas)</option>
+        </select>
+        <p class="help">Si usará 4 o 5 computadoras y los votantes harán fila, elija <strong>Mesa sin código</strong>. La pantalla se reinicia después de cada voto.</p>
+      </div>
+      <button class="button button-primary" type="submit">Crear</button>
+    </form>
+    <p class="help">Se crea en estado <strong>En preparación</strong>. Solo entonces se pueden inscribir candidatos.</p>
+  </div>
+
+  <div class="card">
+    <h2>Flujo recomendado</h2>
+    <ol class="numbered-list">
+      <li>Cree el departamento y elija la forma de acceso.</li>
+      <li>Registre candidatos e inscríbalos en la ronda correspondiente.</li>
+      <li>Si usa código personal, genere y distribuya los tokens. Si usa mesa sin código, prepare las computadoras.</li>
+      <li>Abra la votación.</li>
+      <li>Al terminar, cierre y certifique el acta.</li>
+      <li>Verifique la integridad y publique los resultados.</li>
+    </ol>
+  </div>
+</div>
+
+<section class="section">
+  <div class="table-wrap card">
+    <table>
+      <thead>
+        <tr>
+          <th>Departamento</th>
+          <th>Estado</th>
+          <th>Acceso</th>
+          <th class="num">Principales</th>
+          <th class="num">Tesorero</th>
+          <th class="num">Participaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for department in departments %}
+          <tr>
+            <td><strong>{{ department.name }}</strong></td>
+            <td><span class="badge badge-{{ department.status }}">{{ department_status_labels[department.status] }}</span></td>
+            <td>
+              <span class="chip">{{ voting_mode_labels[department.voting_mode] }}</span>
+              {% if department.status == "draft" %}
+                <form method="post" action="{{ url_for('admin.department_mode', department_id=department.id) }}" class="mode-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select name="voting_mode" aria-label="Cambiar forma de acceso de {{ department.name }}">
+                    <option value="token" {% if department.voting_mode == "token" %}selected{% endif %}>Código personal</option>
+                    <option value="kiosk" {% if department.voting_mode == "kiosk" %}selected{% endif %}>Mesa sin código</option>
+                  </select>
+                  <button class="button button-ghost button-small" type="submit">Cambiar</button>
+                </form>
+              {% endif %}
+            </td>
+            <td class="num">{{ department.principal_candidates }}</td>
+            <td class="num">{{ department.treasurer_candidates }}</td>
+            <td class="num">{{ department.participations }}</td>
+            <td>
+              <div class="table-actions">
+                {% if department.status == "draft" %}
+                  <form method="post" action="{{ url_for('admin.department_open', department_id=department.id) }}" data-confirm="¿Abrir la votación de {{ department.name }}?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-primary button-small" type="submit">Abrir</button>
+                  </form>
+                {% elif department.status == "open" %}
+                  <form method="post" action="{{ url_for('admin.department_close', department_id=department.id) }}" data-confirm="¿Cerrar y certificar {{ department.name }}? El cierre es definitivo.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-danger button-small" type="submit">Cerrar</button>
+                  </form>
+                {% endif %}
+                {% if department.voting_mode == "token" %}
+                  <a class="button button-secondary button-small" href="{{ url_for('admin.tokens', department_id=department.id) }}">Tokens</a>
+                {% else %}
+                  <a class="button button-secondary button-small" href="{{ url_for('vote.kiosk_home') }}">Mesa</a>
+                {% endif %}
+                <a class="button button-ghost button-small" href="{{ url_for('admin.integrity', department_id=department.id) }}">Integridad</a>
+                {% if department.status == "closed" %}
+                  <a class="button button-ghost button-small" href="{{ url_for('admin.results', department_id=department.id) }}">Acta</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="muted">No hay departamentos creados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

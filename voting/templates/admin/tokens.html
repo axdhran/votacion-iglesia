@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Tokens · {{ department.name }}{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Control de acceso</p>
+    <h1>Tokens de {{ department.name }}</h1>
+    <p class="lead">Cada token permite una sola participación en este departamento. El sistema solo almacena su hash HMAC, nunca el valor visible ni a quién se le entregó.</p>
+  </div>
+  <a class="button button-secondary" href="{{ url_for('admin.departments') }}">Volver</a>
+</section>
+
+<div class="stat-strip">
+  <div class="stat"><strong>{{ stats.total }}</strong><span>tokens generados</span></div>
+  <div class="stat"><strong>{{ stats.used }}</strong><span>tokens usados</span></div>
+  <div class="stat"><strong>{{ stats.total - stats.used }}</strong><span>tokens disponibles</span></div>
+  <div class="stat"><strong>{{ department_status_labels[department.status] }}</strong><span>estado</span></div>
+</div>
+
+<div class="two-column align-start">
+  <div class="card form-card">
+    <h2>Generar tokens</h2>
+    {% if department.voting_mode == "kiosk" %}
+      <div class="notice notice-info">
+        <strong>Este departamento usa el modo mesa sin código.</strong>
+        <p>No necesita generar tokens. Abra la <a href="{{ url_for('vote.kiosk_home') }}">pantalla de mesa</a> en cada computadora y entregue el dispositivo a los votantes.</p>
+        <p>Si prefiere usar códigos personales, cambie la forma de acceso en <a href="{{ url_for('admin.departments') }}">Departamentos</a> antes de abrir la votación.</p>
+      </div>
+    {% elif department.status == "closed" %}
+      <p class="muted">La votación está cerrada; no se pueden generar más tokens.</p>
+    {% else %}
+      <form method="post" action="{{ url_for('admin.tokens', department_id=department.id) }}" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="count">Cantidad</label>
+          <input id="count" name="count" type="number" required min="1" max="500" value="10" inputmode="numeric">
+        </div>
+        <button class="button button-primary" type="submit">Generar tokens</button>
+      </form>
+      <p class="help">Para votación presencial puede generar 1 token por persona en la mesa. Para votación en línea, distribuya un token por persona por el canal oficial.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Reglas de entrega</h2>
+    {% if department.voting_mode == "kiosk" %}
+      <ul class="check-list">
+        <li>Verifique la identidad de cada votante fuera del sistema.</li>
+        <li>Entregue el dispositivo y espere a que termine.</li>
+        <li>La pantalla vuelve sola al inicio para la siguiente persona.</li>
+        <li>No deje la pantalla desatendida con una votación a medias.</li>
+      </ul>
+    {% else %}
+      <ul class="check-list">
+        <li>Entregue un token a cada persona autorizada, después de verificar su identidad fuera del sistema.</li>
+        <li>No anote en el sistema a quién entregó cada token.</li>
+        <li>No comparta listas de tokens por canales públicos.</li>
+        <li>Un token usado no puede reutilizarse, aunque la persona no termine la papeleta.</li>
+      </ul>
+    {% endif %}
+  </div>
+</div>
+
+{% if generated %}
+  <section class="section">
+    <div class="card token-output">
+      <div class="token-output-head">
+        <div>
+          <p class="eyebrow">Se muestran una sola vez</p>
+          <h2>{{ generated|length }} tokens generados</h2>
+        </div>
+        <div class="heading-actions">
+          <button class="button button-secondary button-small" type="button" data-copy-target="#token-list">Copiar todos</button>
+          <button class="button button-secondary button-small" type="button" data-print>Imprimir</button>
+        </div>
+      </div>
+      <div class="notice notice-warning">
+        <strong>Guarde o imprima esta lista ahora.</strong>
+        <p>Al salir de esta página no podrá recuperar los valores visibles. Solo quedan hashes en la base de datos.</p>
+      </div>
+      <label class="sr-only" for="token-list">Tokens generados</label>
+      <textarea id="token-list" class="token-textarea" readonly rows="{{ generated|length if generated|length > 4 else 4 }}">{{ generated|join('\n') }}</textarea>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

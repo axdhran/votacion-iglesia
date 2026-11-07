@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Verificar comprobante · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow">
+  <div class="page-heading">
+    <p class="eyebrow">Verificación pública</p>
+    <h1>Comprobar una papeleta</h1>
+    <p class="lead">Ingrese un código de comprobante. La consulta confirma que la papeleta existe y que la cadena de integridad del departamento es válida; no muestra sus selecciones.</p>
+  </div>
+
+  <div class="card form-card">
+    <form method="post" action="{{ url_for('public.verify') }}" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="receipt">Código de comprobante</label>
+        <input
+          id="receipt"
+          name="receipt"
+          type="text"
+          required
+          minlength="16"
+          maxlength="200"
+          value="{{ submitted }}"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="Pegue aquí su comprobante"
+        >
+      </div>
+      <button class="button button-primary button-full" type="submit">Verificar</button>
+    </form>
+  </div>
+
+  {% if receipt %}
+    <div class="card result-box result-ok">
+      <div class="result-icon" aria-hidden="true">✓</div>
+      <div>
+        <p class="eyebrow">Comprobante válido</p>
+        <h2>{{ receipt.department_name }}</h2>
+        <dl class="detail-list">
+          <div><dt>Ronda</dt><dd>{{ receipt.round_label }}</dd></div>
+          <div><dt>Registrada</dt><dd>{{ receipt.created_at|friendly_datetime }}</dd></div>
+          <div><dt>Cadena de integridad</dt><dd>{{ "Válida" if receipt.chain_ok else "Con errores" }}</dd></div>
+          <div><dt>Huella de la papeleta</dt><dd><code>{{ receipt.entry_hash|short_hash }}</code></dd></div>
+        </dl>
+        <p class="muted small">La huella no revela por quién votó. Solo acredita que la papeleta forma parte de la cadena del departamento.</p>
+        {% if receipt.department_status == "closed" %}
+          <a class="text-link" href="{{ url_for('public.result_detail', department_id=receipt.department_id) }}">Ver el acta de este departamento →</a>
+        {% endif %}
+      </div>
+    </div>
+  {% elif not_found %}
+    <div class="notice notice-error">
+      <strong>No se encontró ese comprobante.</strong>
+      <p>Revise que el código esté completo. Si el problema continúa, contacte a la administración de la iglesia.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

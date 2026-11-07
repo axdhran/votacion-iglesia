@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Acta · {{ department.name }}{% endblock %}
+{% block content %}
+{% if result %}
+  {% include "results/_result_content.html" %}
+
+  <section class="section">
+    <div class="card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Verificación administrativa</p>
+          <h2>Comprobaciones del cierre</h2>
+        </div>
+        {% if verification.ok %}
+          <span class="badge badge-verified">Todo correcto</span>
+        {% else %}
+          <span class="badge badge-error">Falló una comprobación</span>
+        {% endif %}
+      </div>
+      <ul class="check-results">
+        {% for check in verification.checks %}
+          <li class="{{ 'ok' if check.ok else 'fail' }}">
+            <span class="check-icon" aria-hidden="true">{{ "✓" if check.ok else "✕" }}</span>
+            <span><strong>{{ check.name }}</strong><br><span class="muted">{{ check.detail }}</span></span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+{% else %}
+  <section class="page-heading">
+    <p class="eyebrow">Acta no disponible</p>
+    <h1>{{ department.name }}</h1>
+    <p class="lead">Los resultados se muestran únicamente después de cerrar y certificar la votación.</p>
+  </section>
+  <div class="card empty-state">
+    {% if department.status == "open" %}
+      <h2>La votación está abierta</h2>
+      <p>El acta se generará automáticamente al cerrar. Antes del cierre no es posible ver conteos ni ganadores.</p>
+      <form method="post" action="{{ url_for('admin.department_close', department_id=department.id) }}" data-confirm="¿Cerrar y certificar {{ department.name }}? El cierre es definitivo.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-danger" type="submit">Cerrar y certificar ahora</button>
+      </form>
+    {% elif department.status == "draft" %}
+      <h2>El departamento está en preparación</h2>
+      <p>Primero inscriba candidatos y abra la votación.</p>
+      <a class="button button-secondary" href="{{ url_for('admin.departments') }}">Ir a departamentos</a>
+    {% else %}
+      <h2>No se encontró el acta certificada</h2>
+      <p>Esto no debería ocurrir en una votación cerrada. Revise la integridad del departamento antes de continuar.</p>
+      <a class="button button-danger" href="{{ url_for('admin.integrity', department_id=department.id) }}">Revisar integridad</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="form-actions">
+  <a class="button button-secondary" href="{{ url_for('admin.departments') }}">Volver a departamentos</a>
+  <a class="button button-ghost" href="{{ url_for('admin.integrity', department_id=department.id) }}">Verificación detallada</a>
+</div>
+{% endblock %}

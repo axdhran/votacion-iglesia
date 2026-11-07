@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Voto registrado · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow vote-flow">
+  <ol class="steps-indicator" aria-label="Pasos para votar">
+    <li><span>1</span> Entrar</li>
+    <li><span>2</span> Elegir</li>
+    <li class="active" aria-current="step"><span>3</span> Confirmar</li>
+  </ol>
+
+  <div class="success-hero">
+    <div class="success-mark" aria-hidden="true">✓</div>
+    <p class="eyebrow">Voto registrado</p>
+    <h1>{% if kiosk %}¡Listo! Su voto quedó guardado{% else %}Su papeleta fue guardada{% endif %}</h1>
+    <p class="lead">
+      {% if kiosk %}
+        Gracias. Pase el dispositivo a la siguiente persona de la fila.
+      {% else %}
+        Se registraron las dos rondas de su departamento. Guarde los comprobantes: son la única forma de verificar después que su papeleta existe.
+      {% endif %}
+    </p>
+  </div>
+
+  {% if kiosk %}
+    <div class="card kiosk-reset-card" data-auto-reset="{{ url_for('vote.kiosk_home') }}" data-reset-seconds="12">
+      <p class="lead center">La pantalla volverá sola al inicio en <strong data-reset-countdown>12</strong> segundos.</p>
+      <div class="form-actions center-actions">
+        <a class="button button-primary button-large" href="{{ url_for('vote.kiosk_home') }}">Siguiente persona ahora</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <details class="help-panel" {% if not kiosk %}open{% endif %}>
+    <summary>{% if kiosk %}¿Desea guardar un comprobante?{% else %}Sus comprobantes{% endif %}</summary>
+    <div>
+      {% if kiosk %}
+        <p>Los comprobantes permiten verificar después que la papeleta existe, sin revelar por quién votó. Si no los necesita, puede continuar.</p>
+      {% endif %}
+      <div class="receipt-list">
+        {% for receipt in receipts %}
+          <article class="card receipt-card">
+            <div>
+              <p class="eyebrow">{{ receipt.label }}</p>
+              <h2>Comprobante {{ loop.index }}</h2>
+            </div>
+            <div class="receipt-code-row">
+              <code class="receipt-code">{{ receipt.code }}</code>
+              <button class="button button-secondary button-small" type="button" data-copy="{{ receipt.code }}">Copiar</button>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+      <div class="notice notice-warning">
+        <strong>Guarde estos códigos ahora.</strong>
+        <p>No se volverán a mostrar. No permiten ver por quién votó, solo comprobar que la papeleta fue registrada y que la cadena de integridad es válida.</p>
+      </div>
+    </div>
+  </details>
+
+  {% if not kiosk %}
+    <div class="form-actions">
+      <a class="button button-primary" href="{{ url_for('public.verify') }}">Verificar un comprobante</a>
+      <a class="button button-secondary" href="{{ url_for('public.index') }}">Volver al inicio</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

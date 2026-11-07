@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Elegir candidatos · {{ department.name }}{% endblock %}
+{% block content %}
+<section class="vote-flow">
+  <ol class="steps-indicator" aria-label="Pasos para votar">
+    <li><span>1</span> Entrar</li>
+    <li class="active" aria-current="step"><span>2</span> Elegir</li>
+    <li><span>3</span> Confirmar</li>
+  </ol>
+
+  <div class="ballot-head">
+    <div>
+      <p class="eyebrow">Papeleta anónima</p>
+      <h1>{{ department.name }}</h1>
+      <p class="lead">Toque los nombres que desea elegir. Al final podrá revisar todo antes de enviar.</p>
+    </div>
+    <span class="badge badge-open">Votación abierta</span>
+  </div>
+
+  {% if kiosk %}
+    <div class="kiosk-banner">
+      <div>
+        <span class="badge badge-open">Modo mesa</span>
+        <p class="help">Pantalla compartida. Al terminar, volverá sola al inicio para la siguiente persona.</p>
+      </div>
+      <form method="post" action="{{ url_for('vote.kiosk_reset') }}" data-confirm="¿Reiniciar la pantalla? No se guardará ningún voto de esta persona.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-ghost button-small" type="submit">Reiniciar pantalla</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <div class="notice notice-info friendly-tip">
+    <strong>Consejo:</strong>
+    <p>Para quitar una marca, toque otra vez el mismo nombre. No hay orden de preferencia: los tres nombres de la primera ronda valen igual.</p>
+  </div>
+
+  <form method="post" action="{{ url_for('vote.review') }}" class="ballot-form" data-ballot-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <section class="card ballot-round" aria-labelledby="principal-title">
+      <div class="round-heading">
+        <div>
+          <span class="round-kicker">Primera ronda</span>
+          <h2 id="principal-title">Elija 3 nombres</h2>
+          <p>Estos cargos son <strong>Presidente, Vicepresidente y Secretario</strong>. Toque exactamente 3 nombres distintos.</p>
+        </div>
+        <span class="selection-counter" data-counter-for="principal" data-max="3" aria-live="polite">0 de 3</span>
+      </div>
+
+      <div class="candidate-grid">
+        {% for candidate in principal %}
+          <label class="candidate-option" for="principal-{{ candidate.id }}">
+            <input
+              id="principal-{{ candidate.id }}"
+              type="checkbox"
+              name="principal"
+              value="{{ candidate.id }}"
+              data-max-group="principal"
+              {% if candidate.id in selected_principal %}checked{% endif %}
+            >
+            <span class="candidate-check" aria-hidden="true"></span>
+            <span class="candidate-name">{{ candidate.full_name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card ballot-round" aria-labelledby="treasurer-title">
+      <div class="round-heading">
+        <div>
+          <span class="round-kicker">Segunda ronda</span>
+          <h2 id="treasurer-title">Elija 1 nombre para Tesorero</h2>
+          <p>Toque <strong>un solo nombre</strong>. El candidato con más votos será Tesorero.</p>
+        </div>
+        <span class="selection-counter" data-counter-for="treasurer" data-max="1" aria-live="polite">0 de 1</span>
+      </div>
+
+      <div class="candidate-grid">
+        {% for candidate in treasurer %}
+          <label class="candidate-option" for="treasurer-{{ candidate.id }}">
+            <input
+              id="treasurer-{{ candidate.id }}"
+              type="radio"
+              name="treasurer"
+              value="{{ candidate.id }}"
+              data-max-group="treasurer"
+              {% if candidate.id in selected_treasurer %}checked{% endif %}
+            >
+            <span class="candidate-check" aria-hidden="true"></span>
+            <span class="candidate-name">{{ candidate.full_name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="notice notice-privacy">
+      <strong>Su papeleta no lleva su nombre.</strong>
+      <p>El código de acceso ya fue usado. Cuando confirme, se guardarán dos papeletas sin ningún vínculo con usted.</p>
+    </div>
+
+    <div class="ballot-actions">
+      <button class="button button-primary button-large" type="submit">Revisar mi voto →</button>
+      <p class="help">Todavía podrá corregir antes de enviar.</p>
+    </div>
+  </form>
+</section>
+{% endblock %}

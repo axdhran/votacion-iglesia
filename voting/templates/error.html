@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow">
+  <div class="empty-state card">
+    <p class="eyebrow">Error {{ code }}</p>
+    <h1>{{ title }}</h1>
+    <p class="lead">{{ message }}</p>
+    <div class="form-actions">
+      <a class="button button-primary" href="{{ url_for('public.index') }}">Volver al inicio</a>
+      {% if current_admin %}
+        <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">Ir al panel</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

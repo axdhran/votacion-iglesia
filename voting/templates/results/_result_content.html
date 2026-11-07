@@ -1,0 +1,120 @@
+<section class="result-summary">
+  <div class="result-summary-head">
+    <div>
+      <p class="eyebrow">Acta certificada</p>
+      <h1>{{ result.department_name }}</h1>
+      <p class="muted">Cerrada el {{ result.closed_at|friendly_datetime }}</p>
+    </div>
+    {% if verification and verification.ok %}
+      <span class="badge badge-verified">✓ Integridad verificada</span>
+    {% else %}
+      <span class="badge badge-error">Revisar integridad</span>
+    {% endif %}
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat"><strong>{{ result.participation_count }}</strong><span>participaciones</span></div>
+    <div class="stat"><strong>{{ result.principal_ballots }}</strong><span>papeletas principales</span></div>
+    <div class="stat"><strong>{{ result.treasurer_ballots }}</strong><span>papeletas de tesorero</span></div>
+    <div class="stat"><strong>{{ result.result_created_at|friendly_datetime }}</strong><span>sello del acta</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Cargos principales</p>
+    <h2>Presidente, Vicepresidente y Secretario</h2>
+  </div>
+  <div class="winner-grid">
+    {% for winner in winners.principal %}
+      <article class="card winner-card winner-{{ loop.index }}">
+        <span class="winner-position">{{ winner.position }}</span>
+        <h3>{{ winner.full_name }}</h3>
+        <p><strong>{{ winner.votes }}</strong> votos</p>
+      </article>
+    {% else %}
+      <p class="muted">Sin candidatos en esta ronda.</p>
+    {% endfor %}
+  </div>
+  {% if winners.principal_tie %}
+    <div class="notice notice-warning">
+      <strong>Empate en el límite de los tres puestos.</strong>
+      <p>{{ winners.tie_rule }} El acta muestra el orden aplicado para que el resultado sea reproducible.</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Tesorero</p>
+    <h2>Resultado de la ronda de tesorero</h2>
+  </div>
+  {% for winner in winners.treasurer %}
+    <article class="card winner-card winner-1 winner-treasurer">
+      <span class="winner-position">Tesorero</span>
+      <h3>{{ winner.full_name }}</h3>
+      <p><strong>{{ winner.votes }}</strong> votos</p>
+    </article>
+  {% else %}
+    <p class="muted">Sin candidatos en esta ronda.</p>
+  {% endfor %}
+  {% if winners.treasurer_tie %}
+    <div class="notice notice-warning">
+      <strong>Empate en la primera posición.</strong>
+      <p>{{ winners.tie_rule }}</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="section">
+  <div class="two-column">
+    <div class="card">
+      <h2>Conteo completo · Cargos principales</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Candidato</th><th class="num">Votos</th><th class="num">% de participaciones</th></tr></thead>
+          <tbody>
+            {% for item in result.principal %}
+              {% set pct = (item.votes * 100 / result.participation_count) if result.participation_count else 0 %}
+              <tr>
+                <td>{{ item.full_name }}</td>
+                <td class="num">{{ item.votes }}</td>
+                <td class="num">{{ "%.1f"|format(pct) }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="help">Cada participación aporta 3 votos en esta ronda; los porcentajes se calculan sobre participaciones, no sobre el total de marcas.</p>
+    </div>
+
+    <div class="card">
+      <h2>Conteo completo · Tesorero</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Candidato</th><th class="num">Votos</th><th class="num">% de participaciones</th></tr></thead>
+          <tbody>
+            {% for item in result.treasurer %}
+              {% set pct = (item.votes * 100 / result.participation_count) if result.participation_count else 0 %}
+              <tr>
+                <td>{{ item.full_name }}</td>
+                <td class="num">{{ item.votes }}</td>
+                <td class="num">{{ "%.1f"|format(pct) }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<details class="card integrity-details">
+  <summary>Huellas y verificación del acta</summary>
+  <dl class="detail-list">
+    <div><dt>Hash del acta</dt><dd><code>{{ result.result_hash }}</code></dd></div>
+    <div><dt>Cabeza de la cadena de papeletas</dt><dd><code>{{ result.chain_head }}</code></dd></div>
+    <div><dt>Regla de desempate</dt><dd>{{ winners.tie_rule }}</dd></div>
+  </dl>
+  <p class="muted small">El hash del acta se calcula con HMAC-SHA256 usando una clave que no está almacenada en SQLite. Cualquier cambio en las papeletas o en el acta produce una verificación fallida.</p>
+</details>

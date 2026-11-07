@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Abriendo su papeleta · Voto Iglesia{% endblock %}
+{% block content %}
+<section class="narrow vote-flow quick-access">
+  <div class="card empty-state">
+    <div class="success-mark" aria-hidden="true">✓</div>
+    <p class="eyebrow">Acceso con tarjeta</p>
+    <h1>Abriendo su papeleta…</h1>
+    <p class="lead" data-quick-message>Estamos leyendo el código de su tarjeta. No cierre esta página.</p>
+
+    <form method="post" action="{{ url_for('vote.enter') }}" data-quick-access data-quick-form autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="token" value="">
+      <noscript>
+        <p class="notice notice-warning">Su navegador no permite el acceso automático. Escriba el código de su tarjeta en la página de acceso.</p>
+      </noscript>
+      <button class="button button-primary button-large" type="submit">Continuar con mi código</button>
+    </form>
+
+    <div class="notice notice-warning" data-quick-fallback hidden>
+      <strong>No pudimos leer el código de la tarjeta.</strong>
+      <p>Escriba el código manualmente. Está impreso debajo del cuadrito (QR).</p>
+      <a class="button button-secondary" href="{{ url_for('vote.enter') }}">Escribir mi código</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

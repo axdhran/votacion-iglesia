@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Integridad · {{ department.name }}{% endblock %}
+{% block content %}
+<section class="page-heading admin-heading">
+  <div>
+    <p class="eyebrow">Verificación</p>
+    <h1>Integridad de {{ department.name }}</h1>
+    <p class="lead">Recalcula la cadena de papeletas, los cuadres de participación y, si ya existe, la firma del acta. No muestra el contenido individual de los votos.</p>
+  </div>
+  {% if verification.ok %}
+    <span class="badge badge-verified">✓ Verificación correcta</span>
+  {% else %}
+    <span class="badge badge-error">✕ Revisar</span>
+  {% endif %}
+</section>
+
+<div class="stat-strip">
+  <div class="stat"><strong>{{ verification.computed.participation_count }}</strong><span>participaciones</span></div>
+  <div class="stat"><strong>{{ verification.computed.principal_ballots }}</strong><span>papeletas principales</span></div>
+  <div class="stat"><strong>{{ verification.computed.treasurer_ballots }}</strong><span>papeletas de tesorero</span></div>
+  <div class="stat"><strong>{{ verification.chain.ballots }}</strong><span>papeletas en la cadena</span></div>
+</div>
+
+<div class="card">
+  <h2>Comprobaciones</h2>
+  <ul class="check-results">
+    {% for check in verification.checks %}
+      <li class="{{ 'ok' if check.ok else 'fail' }}">
+        <span class="check-icon" aria-hidden="true">{{ "✓" if check.ok else "✕" }}</span>
+        <span><strong>{{ check.name }}</strong><br><span class="muted">{{ check.detail }}</span></span>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="two-column">
+  <div class="card">
+    <h2>Cadena de papeletas</h2>
+    <dl class="detail-list">
+      <div><dt>Estado</dt><dd>{{ "Válida" if verification.chain.ok else "Con errores" }}</dd></div>
+      <div><dt>Papeletas verificadas</dt><dd>{{ verification.chain.ballots }}</dd></div>
+      <div><dt>Cabeza actual</dt><dd><code>{{ verification.chain.head|short_hash }}</code></dd></div>
+    </dl>
+    {% if verification.chain.errors %}
+      <div class="notice notice-error">
+        <strong>Errores detectados</strong>
+        <ul>
+          {% for error in verification.chain.errors[:10] %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Acta certificada</h2>
+    <p class="muted">El acta se verifica junto con las papeletas en las comprobaciones superiores.</p>
+    <dl class="detail-list">
+      <div><dt>Estado del departamento</dt><dd>{{ department_status_labels[department.status] }}</dd></div>
+      <div><dt>Hash del acta recalculado</dt><dd><code>{{ verification.computed.result_hash|short_hash }}</code></dd></div>
+    </dl>
+    {% if department.status == "closed" %}
+      <a class="button button-secondary" href="{{ url_for('admin.results', department_id=department.id) }}">Ver acta completa</a>
+    {% else %}
+      <p class="help">Aún no hay acta porque la votación no ha cerrado.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="form-actions">
+  <a class="button button-secondary" href="{{ url_for('admin.departments') }}">Volver a departamentos</a>
+  <a class="button button-ghost" href="{{ url_for('admin.audit') }}">Auditoría administrativa</a>
+</div>
+{% endblock %}

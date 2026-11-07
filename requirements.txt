@@ -1,0 +1,4 @@
+Flask>=3.1,<4
+qrcode>=8,<9
+waitress>=3,<4
+pytest>=8,<10
